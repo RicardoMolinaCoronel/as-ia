@@ -11,7 +11,7 @@ Este archivo se encarga de cargar y graficar los datos de un archivo CSV, recopi
 - Graficar los datos de un sensor específico en función del tiempo para los ejes X, Y, y Z.
 
 #### Imagen de la salida del sensor:
-![Gráfico de la salida del sensor](images/Grafico.jpg)
+![Gráfico de la salida del sensor](Images/Grafico.jpg)
 
 ### 2. MCU_ACC.ino
 Este archivo contiene un sketch para la plataforma Arduino que se ejecuta en el MCU Seeed XIAO nRF52840 Sense. Está configurado para interactuar con un sensor LSM6DS3 y enviar datos mediante Bluetooth Low Energy (BLE).
