@@ -1,4 +1,7 @@
-# CDM
+# Proyecto de Detección de Congelamiento de la Marcha (CDM)
+Esta guía proporciona los pasos necesarios para configurar y utilizar el proyecto basado en el Seeed XIAO nRF52840 Sense.
+El proyecto tiene como objetivo detectar el Congelamiento de la Marcha en pacientes mediante el uso de sensores.
+
 ## Guía de Configuración y Uso del Proyecto con Seeed XIAO nRF52840 Sense
 
 ## Descripción de los Archivos
@@ -36,7 +39,7 @@ Este archivo implementa un servidor utilizando Dash para la visualización de da
 - Manejo de conexiones BLE y procesamiento de los datos recibidos.
 
 #### Vista preliminar del servidor:
-![Vista del servidor](images/servidor.jpg)
+![Vista del servidor](Images/servidor.jpg)
 
 Además, en el servidor se realiza la etiquetación de datos y se permite la descarga del archivo CSV de los datos tomados.
 
@@ -117,17 +120,17 @@ En el repositorio, encontrarás un diseño de case creado con Fusion 360 para pr
 
 Las imágenes a continuación muestran los diseños del case:
 
-- ![Case completo](images/case.jpg)
-- ![Vista superior del case](images/case_superior.jpg)
-- ![Base de zapato](images/zapato.jpg)
+- ![Case completo](Images/case.jpg)
+- ![Vista superior del case](Images/case_superior.jpg)
+- ![Base de zapato](Images/zapato.jpg)
 
 ### PCB Diseñada en Altium Designer
 La PCB fue diseñada utilizando Altium Designer. En el repositorio, encontrarás el proyecto de Altium y los archivos Gerber necesarios para su fabricación.
 
 Imágenes de la PCB:
 
-- ![PCB Diseño 1](images/pcb.jpg)
-- ![PCB Diseño 2](images/pcb2.jpg)
+- ![PCB Diseño 1](Images/pcb.jpg)
+- ![PCB Diseño 2](Images/pcb2.jpg)
 
 ## Notas y Consideraciones
 - Asegúrate de que los dispositivos BLE estén correctamente configurados y dentro del rango de conexión.
@@ -138,3 +141,15 @@ Imágenes de la PCB:
 Esta guía proporciona una descripción detallada de cómo configurar y utilizar el proyecto basado en el Seeed XIAO nRF52840 Sense. Siguiendo los pasos y utilizando los recursos proporcionados en el repositorio, podrás desplegar con éxito la solución para la recopilación y análisis de datos de sensores utilizando BLE y Machine Learning.
 
 
+
+## Hardware
+
+Este proyecto utiliza una PCB diseñada específicamente para el Seeed XIAO nRF52840 Sense. La placa incluye:
+
+- **Conexiones:** Pines para la conexión de sensores adicionales, como acelerómetros o giroscopios.
+- **Alimentación:** Conexión para baterías LiPo, lo que permite portabilidad.
+- **Caja:** El dispositivo está protegido por un case impreso en 3D, diseñado para ser compacto y cómodo de usar en el talón del paciente.
+
+### Imágenes de la PCB y el case:
+![PCB del dispositivo](Images/PCB.jpg)
+![Case impreso en 3D](Images/Case.jpg)
