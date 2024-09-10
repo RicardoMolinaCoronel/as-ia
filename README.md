@@ -154,5 +154,5 @@ Este proyecto utiliza una PCB diseñada específicamente para el Seeed XIAO nRF5
 - **Caja:** El dispositivo está protegido por un case impreso en 3D, diseñado para ser compacto y cómodo de usar en el talón del paciente.
 
 ### Imágenes de la PCB y el case:
-![PCB del dispositivo](Images/PCB.jpg)
-![Case impreso en 3D](Images/Case.jpg)
+![PCB del dispositivo](Images/pcb.jpg)
+![Case impreso en 3D](Images/case.jpg)
