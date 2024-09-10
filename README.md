@@ -71,6 +71,7 @@ Ejecuta los siguientes comandos en tu terminal para instalar las bibliotecas nec
 
 ```bash
 pip install pandas matplotlib dash plotly bleak tsfresh scikit-learn seaborn
+```
 
 ### Configuración del Entorno de Arduino
 - **Instala Arduino IDE:** Descárgalo desde [Arduino IDE](https://www.arduino.cc/en/software).
@@ -92,6 +93,7 @@ Para graficar los datos, asegúrate de tener el archivo CSV disponible en la rut
 
 ```bash
 python Datos.py
+```
 
 Este comando cargará los datos del CSV y generará gráficos que muestran los valores del sensor a lo largo del tiempo para los ejes X, Y, y Z.
 
@@ -100,6 +102,7 @@ Para iniciar el servidor de visualización de datos, utiliza el siguiente comand
 
 ```bash
 python Servidor.py
+```
 
 Este comando iniciará un servidor web accesible a través de tu navegador para visualizar los datos recolectados desde los dispositivos BLE conectados. En el servidor, podrás realizar la etiquetación de datos y descargar el archivo CSV de los datos tomados.
 
