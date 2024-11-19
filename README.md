@@ -76,8 +76,7 @@ pip install pandas matplotlib dash plotly bleak tsfresh scikit-learn seaborn
 ### Configuración del Entorno de Arduino
 - **Instala Arduino IDE:** Descárgalo desde [Arduino IDE](https://www.arduino.cc/en/software).
 - **Instala las bibliotecas requeridas en Arduino IDE:**
-  - **Adafruit Bluefruit nRF52:** Para el manejo del módulo Bluetooth del Seeed XIAO nRF52840 Sense.
-  - **SparkFun LSM6DS3:** Para la comunicación con el sensor LSM6DS3 utilizado en este proyecto.
+  - **Seeed Arduino LSM6DS3:** Para la comunicación con el sensor LSM6DS3 utilizado en este proyecto.
 
 ### Programación del MCU Seeed XIAO nRF52840 Sense
 1. **Conecta tu MCU a la computadora** usando un cable USB.

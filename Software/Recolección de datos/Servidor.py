@@ -1,6 +1,7 @@
 import asyncio
 import struct
 import dash
+import json
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
@@ -21,18 +22,21 @@ characteristic_uuid_1 = "00002a5d-0000-1000-8000-00805f9b34fb"  # UUID del Pie D
 characteristic_uuid_2 = "00002a5d-0000-1000-8000-00805f9b34fb"  # UUID del Pie Izquierdo
 
 # Variables para los datos
-x_data_1, y_data_1, z_data_1 = [], [], []  # Sensor Pie Derecho
-x_data_2, y_data_2, z_data_2 = [], [], []  # Sensor Pie Izquierdo
+x_data_1, y_data_1, z_data_1, t_data_1 = [], [], [], []  # Sensor Pie Derecho
+x_data_2, y_data_2, z_data_2, t_data_2 = [], [], [], []  # Sensor Pie Izquierdo
 
 timeline = []
 sensor_data_list = []
+sensor1_data_list = []
+sensor_data_dict = {}
+sensor1_data_dict = {}
 start_time = None
 
 # Estado de toma de datos y etiquetas
 is_collecting_data = False
 current_label = 0
 last_download_click = 0
-
+firstTime = True
 # Tamaño de la ventana deslizante
 WINDOW_SIZE = 150
 
@@ -89,18 +93,26 @@ running_ble_clients = {}
     Input('interval-component', 'n_intervals'),
 )
 def update_graph(start_n_clicks, stop_n_clicks, start_cdm_n_clicks, stop_cdm_n_clicks, start_pvi_n_clicks, stop_pvi_n_clicks, download_n_clicks, n_intervals):
-    global is_collecting_data, current_label, timeline, last_download_click, sensor_data_list, start_time
+    global is_collecting_data, current_label, timeline, last_download_click, sensor_data_list, sensor1_data_list, start_time, firstTime
 
     triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
 
     if triggered == 'start-data-collection':
-        is_collecting_data = True
-        timeline = []  # Reiniciar el timeline
-        sensor_data_list = []  # Reiniciar la lista de datos
-        start_time = time.time()  # Guardar el tiempo de inicio
+        if firstTime:
+            is_collecting_data = True
+            timeline = []  # Reiniciar el timeline
+            start_time = time.time()  # Guardar el tiempo de inicio
+        else:
+            is_collecting_data = True
+            timeline = []  # Reiniciar el timeline
+            start_time = time.time()  # Guardar el tiempo de inicio
+        print("Recogiendo datos...")
     elif triggered == 'stop-data-collection':
+        print("Finalizando...")
         is_collecting_data = False
+        firstTime = False
         stop_all_ble_clients()
+
     elif triggered == 'start-cdm':
         current_label = 1  # Etiqueta para CDM
     elif triggered == 'stop-cdm':
@@ -147,8 +159,10 @@ def update_graph(start_n_clicks, stop_n_clicks, start_cdm_n_clicks, stop_cdm_n_c
         z_figure_2.update_layout(title="Aceleración en el eje Z (Pie Izquierdo)", xaxis_title="Muestra", yaxis_title="Aceleración (m/s²)")
 
         current_time = time.time()
-        timestamp = (current_time - start_time) * 1000  # Tiempo en milisegundos desde el inicio
-        timeline.append(timestamp)
+        #timestamp = (current_time - start_time) * 1000  # Tiempo en milisegundos desde el inicio
+        #timeline.append(timestamp)
+        '''
+        timestamp = t_data_1[-1]
         sensor_data_list.append({
             'timestamp': timestamp,
             'x_data_1': x_data_1[-1],
@@ -159,14 +173,26 @@ def update_graph(start_n_clicks, stop_n_clicks, start_cdm_n_clicks, stop_cdm_n_c
             'z_data_2': z_data_2[-1],
             'current_label': current_label
         })
+        '''
 
     csv_data = None
     if triggered == 'download-data':
         if download_n_clicks > last_download_click:
             last_download_click = download_n_clicks
             filename = f'data_{time.strftime("%Y%m%d_%H%M%S")}.csv'
+            filenamejs = f'data_{time.strftime("%Y%m%d_%H%M%S")}.json'
             csv_file_path = os.path.join(os.getcwd(), filename)
-            
+            data = {
+                "derecha": list(sensor_data_dict.values()),
+                "izquierda": list(sensor1_data_dict.values())
+            }
+
+            ruta_archivo = os.path.join(os.getcwd(), "Datos_recogidos", filenamejs)
+
+            # Guardar el diccionario `data` en formato JSON
+            with open(ruta_archivo, 'w') as archivo_json:
+                json.dump(data, archivo_json, indent=4)
+            '''
             with open(csv_file_path, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['timestamp', 'x_data_1', 'y_data_1', 'z_data_1',
@@ -176,7 +202,7 @@ def update_graph(start_n_clicks, stop_n_clicks, start_cdm_n_clicks, stop_cdm_n_c
                                      data['x_data_2'], data['y_data_2'], data['z_data_2'], data['current_label']])
             
             csv_data = dcc.send_file(csv_file_path)
-
+            '''
     return (x_figure_1, y_figure_1, z_figure_1, x_figure_2, y_figure_2, z_figure_2, csv_data)
 
 
@@ -188,35 +214,156 @@ async def notification_handler_1(sender, data):
     global partial_data_1
     if is_collecting_data:
         partial_data_1.extend(data)
-        if len(partial_data_1) >= 12:
-            imu_data = struct.unpack('fff', partial_data_1[:12])
-            partial_data_1 = partial_data_1[12:]
+        if len(partial_data_1) >= 20:
+            imu_data = struct.unpack('iffff', partial_data_1[:20])
+            partial_data_1 = partial_data_1[20:]
             threading.Thread(target=process_data_1, args=(imu_data,)).start()
 
 async def notification_handler_2(sender, data):
     global partial_data_2
     if is_collecting_data:
         partial_data_2.extend(data)
-        if len(partial_data_2) >= 12:
-            imu_data = struct.unpack('fff', partial_data_2[:12])
-            partial_data_2 = partial_data_2[12:]
+        if len(partial_data_2) >= 20:
+            imu_data = struct.unpack('iffff', partial_data_2[:20])
+            partial_data_2 = partial_data_2[20:]
             threading.Thread(target=process_data_2, args=(imu_data,)).start()
 
 def process_data_1(imu_data):
-    global x_data_1, y_data_1, z_data_1
-    x_data_1.append(imu_data[0])
-    y_data_1.append(imu_data[1])
-    z_data_1.append(imu_data[2])
+    global x_data_1, y_data_1, z_data_1, t_data_1, sensor_data_dict
+    '''
+    x_data_1.append(imu_data[1])
+    y_data_1.append(imu_data[2])
+    z_data_1.append(imu_data[3])
+    t_data_1.append(imu_data[4])
+    '''
+    '''
+    key = imu_data[4]
+    if imu_data[0] == 0:
+        x_data_1.append(imu_data[1])
+        y_data_1.append(imu_data[2])
+        z_data_1.append(imu_data[3])
+        t_data_1.append(imu_data[4])
+    else:
+        print(str(imu_data[1]) + "," + str(imu_data[2]) + "," + str(imu_data[3]) + "," + str(imu_data[4]))
+    '''
+    key = imu_data[4]
+    part = imu_data[0]
+    if key in sensor_data_dict:
+        if part == 0:
+            x_data_1.append(imu_data[1])
+            y_data_1.append(imu_data[2])
+            z_data_1.append(imu_data[3])
+            sensor_data_dict[key]['x'] = imu_data[1]
+            sensor_data_dict[key]['y'] = imu_data[2]
+            sensor_data_dict[key]['z'] = imu_data[3]
+        else:
+            sensor_data_dict[key]['a'] = imu_data[1]
+            sensor_data_dict[key]['b'] = imu_data[2]
+            sensor_data_dict[key]['g'] = imu_data[3]
+    else:
+        if part == 0:
+            x_data_1.append(imu_data[1])
+            y_data_1.append(imu_data[2])
+            z_data_1.append(imu_data[3])
+            sensor_data_dict[key] = {
+            'millis': imu_data[4],
+            't': imu_data[4],
+            'x': imu_data[1],
+            'y': imu_data[2],
+            'z': imu_data[3],
+            }
+        else:
+            sensor_data_dict[key] = {
+            'millis': imu_data[4],
+            't': imu_data[4],
+            'a': imu_data[1],
+            'b': imu_data[2],
+            'g': imu_data[3],
+            }
+
+    '''
+    sensor_data_list.append({
+        'millis': imu_data[3],
+        't': imu_data[3],
+        'x': imu_data[0],
+        'y': imu_data[1],
+        'z': imu_data[2],
+    })
+    '''
+    '''
+    sensor_data_list.append({
+        'millis': imu_data[3],
+        'x_data_1': imu_data[0],
+        'y_data_1': imu_data[1],
+        'z_data_1': imu_data[2],
+        'x_data_2': imu_data[0],
+        'y_data_2': imu_data[1],
+        'z_data_2': imu_data[2],
+        'current_label': 0
+    })
+    '''
     if len(x_data_1) > WINDOW_SIZE:
         x_data_1.pop(0)
         y_data_1.pop(0)
         z_data_1.pop(0)
 
 def process_data_2(imu_data):
-    global x_data_2, y_data_2, z_data_2
+    global x_data_2, y_data_2, z_data_2, sensor1_data_dict
+    key = imu_data[4]
+    part = imu_data[0]
+    if key in sensor1_data_dict:
+        if part == 0:
+            x_data_2.append(imu_data[1])
+            y_data_2.append(imu_data[2])
+            z_data_2.append(imu_data[3])
+            sensor1_data_dict[key]['x'] = imu_data[1]
+            sensor1_data_dict[key]['y'] = imu_data[2]
+            sensor1_data_dict[key]['z'] = imu_data[3]
+        else:
+            sensor1_data_dict[key]['a'] = imu_data[1]
+            sensor1_data_dict[key]['b'] = imu_data[2]
+            sensor1_data_dict[key]['g'] = imu_data[3]
+    else:
+        if part == 0:
+            x_data_2.append(imu_data[1])
+            y_data_2.append(imu_data[2])
+            z_data_2.append(imu_data[3])
+            sensor1_data_dict[key] = {
+                'millis': imu_data[4],
+                't': imu_data[4],
+                'x': imu_data[1],
+                'y': imu_data[2],
+                'z': imu_data[3],
+            }
+        else:
+            sensor1_data_dict[key] = {
+                'millis': imu_data[4],
+                't': imu_data[4],
+                'a': imu_data[1],
+                'b': imu_data[2],
+                'g': imu_data[3],
+            }
+    '''
+    key = imu_data[4]
+    if imu_data[0] == 0:
+        x_data_2.append(imu_data[1])
+        y_data_2.append(imu_data[2])
+        z_data_2.append(imu_data[3])
+    else:
+        print("IZQUIERDA: "+ str(imu_data[1]) + "," + str(imu_data[2]) + "," + str(imu_data[3]) + "," + str(imu_data[4]))
+    '''
+    '''
     x_data_2.append(imu_data[0])
     y_data_2.append(imu_data[1])
     z_data_2.append(imu_data[2])
+    sensor1_data_list.append({
+        'millis': imu_data[3],
+        't': imu_data[3],
+        'x': imu_data[0],
+        'y': imu_data[1],
+        'z': imu_data[2],
+    })
+    '''
     if len(x_data_2) > WINDOW_SIZE:
         x_data_2.pop(0)
         y_data_2.pop(0)
@@ -261,21 +408,26 @@ def signal_handler(sig, frame):
             thread.join(0)
     sys.exit(0)
 
-if __name__ == '__main__':
+def start_all_connections():
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     dash_thread = threading.Thread(target=lambda: app.run_server(debug=True, use_reloader=False))
     dash_thread.start()
     threads.append(dash_thread)
 
-    ble_thread_1 = threading.Thread(target=start_ble_connection, args=(address_1, characteristic_uuid_1, notification_handler_1))
+    ble_thread_1 = threading.Thread(target=start_ble_connection,
+                                    args=(address_1, characteristic_uuid_1, notification_handler_1))
     ble_thread_1.start()
     threads.append(ble_thread_1)
 
-    ble_thread_2 = threading.Thread(target=start_ble_connection, args=(address_2, characteristic_uuid_2, notification_handler_2))
+    ble_thread_2 = threading.Thread(target=start_ble_connection,
+                                    args=(address_2, characteristic_uuid_2, notification_handler_2))
     ble_thread_2.start()
     threads.append(ble_thread_2)
 
     dash_thread.join()
     ble_thread_1.join()
     ble_thread_2.join()
+
+if __name__ == '__main__':
+    start_all_connections()

@@ -31,7 +31,8 @@ void setup() {
   } else {
     Serial.println("LSM6DS3 inicializado correctamente");
   }
-
+  myIMU.settings.accelRange = 2;
+  myIMU.settings.gyroRange = 250;
   // Configurar manualmente la frecuencia de muestreo para el LSM6DS3
   // Establece ODR del acelerómetro a 104 Hz
   myIMU.writeRegister(LSM6DS3_ACC_GYRO_CTRL1_XL, 0x40);
@@ -41,7 +42,7 @@ void setup() {
   imuService.begin();
   imuCharacteristic1.setProperties(CHR_PROPS_NOTIFY);
   imuCharacteristic1.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-  imuCharacteristic1.setFixedLen(12);  // 3 floats (12 bytes)
+  imuCharacteristic1.setFixedLen(20);  // 3 floats (12 bytes)
   imuCharacteristic1.begin();
 
   Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
@@ -53,21 +54,41 @@ void setup() {
 }
 
 void loop() {
+  unsigned long timestamp = millis(); 
   float x_lsm = myIMU.readFloatAccelX();
   float y_lsm = myIMU.readFloatAccelY();
   float z_lsm = myIMU.readFloatAccelZ();
-
+  float a_lsm = myIMU.readFloatGyroX();
+  float b_lsm = myIMU.readFloatGyroY();
+  float g_lsm = myIMU.readFloatGyroZ();
+  float tiempoEnFloat = (float)timestamp;
+  int id_a = 0;
+  int id_g = 1;
   // Imprimir los valores leídos en el monitor serial
   Serial.print("LSM6DS3 -> X: "); Serial.print(x_lsm);
   Serial.print(", Y: "); Serial.print(y_lsm);
-  Serial.print(", Z: "); Serial.println(z_lsm);
-
+  Serial.print(", Z: "); Serial.print(z_lsm);
+  Serial.print(", t: "); Serial.print(tiempoEnFloat);
+  Serial.print(", A: "); Serial.print(a_lsm);
+  Serial.print(", B: "); Serial.print(b_lsm);
+  Serial.print(", G: "); Serial.println(g_lsm);
   // Convertir los valores a un array de bytes y enviar por BLE
-  uint8_t data[12];
-  memcpy(data, &x_lsm, 4);
-  memcpy(data + 4, &y_lsm, 4);
-  memcpy(data + 8, &z_lsm, 4);
-  imuCharacteristic1.notify(data, 12);
-
+  uint8_t data_a[20];
+  uint8_t data_g[20];
+  //data_a[0] = 0;
+  //data_g[0] = 1;
+  memcpy(data_a, &id_a, 4);
+  memcpy(data_a + 4, &x_lsm, 4);
+  memcpy(data_a + 8, &y_lsm, 4);
+  memcpy(data_a + 12, &z_lsm, 4);
+  memcpy(data_a + 16, &tiempoEnFloat, 4);
+  memcpy(data_g, &id_g, 4);
+  memcpy(data_g + 4, &a_lsm, 4);
+  memcpy(data_g + 8, &b_lsm, 4);
+  memcpy(data_g + 12, &g_lsm, 4);
+  memcpy(data_g + 16, &tiempoEnFloat, 4);
+  imuCharacteristic1.notify(data_a, 20);
+  delay(10); // Pequeño delay para ajustar el ritmo del loop
+  imuCharacteristic1.notify(data_g, 20);
   delay(10); // Pequeño delay para ajustar el ritmo del loop
 }
